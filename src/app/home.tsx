@@ -4,8 +4,12 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import BottomTabNavigation from "../navigation/bottomTabNavigation";
 import ProductDetails from "../Screens/productDetails";
+import Cart from "../Screens/Cart";
+import Orders from "../Screens/Orders";
+import Appoinments from "../Screens/Appoinments";
+import Reports from "../Screens/Reports";
+import History from "../Screens/History";
 import Product from "../Screens/Product";
-
 
 const Stack = createNativeStackNavigator();
 
@@ -32,21 +36,45 @@ export default function Index() {
 
   return (
     <Stack.Navigator>
-        
       <Stack.Screen
-        name="Bottom Navigation"
+        name="BottomNavigation"
         component={BottomTabNavigation}
-        options={{headerShown: false}}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="ProductDetails"
         component={ProductDetails}
-        options={{headerShown: false}}
+        options={{ headerShown: false }}
       />
-        <Stack.Screen
+      <Stack.Screen
         name="Product"
         component={Product}
-        options={{headerShown: false}}
+        options={{ headerShown: false }}
+      />
+        <Stack.Screen
+        name="Reports"
+        component={Reports}
+        options={{ headerShown: false }}
+      />
+        <Stack.Screen
+        name="Appoinments"
+        component={Appoinments}
+        options={{ headerShown: false }}
+      />
+        <Stack.Screen
+        name="Orders"
+        component={Orders}
+        options={{ headerShown: false }}
+      />
+        <Stack.Screen
+        name="Cart"
+        component={Cart}
+        options={{ headerShown: false }}
+      />
+       <Stack.Screen
+        name="History"
+        component={History}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

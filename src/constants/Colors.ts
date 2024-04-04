@@ -20,6 +20,7 @@ export default {
   onPrimary: white,
   active: blue,
   borderWithOpacity: "#1f41bb",
+  red : "#FF0000",
   lightPrimary: lightBlue,
   gray: gray,
 

@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { Feather } from "@expo/vector-icons";
 import {
   Image,
@@ -9,37 +8,82 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react";
-import { useFonts } from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
+import { useNavigation, StackActions } from "@react-navigation/native";
 import { router } from "expo-router";
+
 import { StatusBar } from "expo-status-bar";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import Colors from "../constants/Colors";
+import Size from "../constants/Size";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
-  const [name, setName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [loader, setLoader] = useState(false);
+  const [responseData, setResponseData] = useState(null);
+  const [input, setInput] = useState({
+    email: "",
+    password: "",
+  });
   const [passwordIsVisible, setPasswordIsVisible] = useState<boolean>(false);
-  const [isNameFocused, setIsNameFocused] = useState(false);
-  const [isEmailFocused, setIsEmailFocused] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const navigation = useNavigation();
 
-  const [fontsLoaded, fontError] = useFonts({
-    GTWalsheimPro: require("../assets/fonts/GTWalsheimPro-Regular.ttf"),
-    GTWalsheimProMedium: require("../assets/fonts/GTWalsheimPro-Medium.ttf"),
-    GTWalsheimProBold: require("../assets/fonts/GTWalsheimPro-Bold.ttf"),
+  const LoginSchema = Yup.object().shape({
+    password: Yup.string().min(8, "Password must be at least 8 characters"),
+    email: Yup.string().email("Invalid email"),
   });
 
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded || fontError) {
-      await SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
+  const Login = async (values: any) => {
+    setLoader(true);
 
-  if (!fontsLoaded || fontError) {
-    return null;
-  }
+    try {
+      const endpoint =
+        "https://parishbackend-production.up.railway.app/api/login";
+      const data = values;
+
+      const response = await axios.post(endpoint, data);
+      if (response.status === 200) {
+        setLoader(false);
+        setResponseData(response.data);
+
+        await AsyncStorage.setItem(
+          `user${responseData._id}`,
+          JSON.stringify(responseData)
+        );
+
+        await AsyncStorage.setItem("id", JSON.stringify(responseData._id));
+
+        router.replace("/home");
+      } else {
+        setLoader(false);
+        Alert.alert("Error", "please provide valid email or password", [
+          {
+            text: "Ok",
+          },
+        ]);
+      }
+    } catch (error) {
+      setLoader(false);
+      Alert.alert("Error", "please provide valid email or password", [
+        {
+          text: "Ok",
+        },
+      ]);
+    }
+  };
+
+  const inValidFrom = () => {
+    Alert.alert("", "please fill out the required fields", [
+      {
+        text: "Ok",
+      },
+    ]);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -66,56 +110,94 @@ export default function App() {
             <View style={styles.orLine} />
           </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: isEmailFocused ? "#157EB3" : "#eee",
-                  borderWidth: 1.5,
-                },
-              ]}
-              onFocus={() => setIsEmailFocused(true)}
-              onBlur={() => setIsEmailFocused(false)}
-              placeholder="Email ID"
-              placeholderTextColor="#7C808D"
-              selectionColor="#3662AA"
-              onChangeText={setEmail}
-              value={email}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  borderColor: isPasswordFocused ? "#157EB3" : "#eee",
-                  borderWidth: 1.5,
-                },
-              ]}
-              onFocus={() => setIsPasswordFocused(true)}
-              onBlur={() => setIsPasswordFocused(false)}
-              placeholder="Password"
-              secureTextEntry={!passwordIsVisible}
-              placeholderTextColor="#7C808D"
-              selectionColor="#3662AA"
-              onChangeText={setPassword}
-              value={password}
-            />
-            <TouchableOpacity
-              style={styles.passwordVisibleButton}
-              onPress={() => setPasswordIsVisible(!passwordIsVisible)}
-            >
-              <Feather
-                name={passwordIsVisible ? "eye" : "eye-off"}
-                size={20}
-                color="#7C808D"
-              />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.loginButton}>
-            <Text style={styles.loginButtonText}>Login</Text>
-          </TouchableOpacity>
+          <Formik
+            initialValues={{ email: "", password: "" }}
+            validationSchema={LoginSchema}
+            onSubmit={(values) => Login(values)}
+          >
+            {({
+              handleChange,
+              handleBlur,
+              touched,
+              handleSubmit,
+              values,
+              errors,
+              isValid,
+              setFieldTouched,
+            }) => (
+              <>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: touched.email ? "#157EB3" : "#eee",
+                        borderWidth: 1.5,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor="#7C808D"
+                    onFocus={() => {
+                      setFieldTouched("email");
+                    }}
+                    onBlur={() => {
+                      setFieldTouched("email", "");
+                    }}
+                    value={values.email}
+                    onChangeText={handleChange("email")}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+                {touched.email && errors.email && (
+                  <Text style={styles.error}>{errors.email}</Text>
+                )}
+
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: touched.password ? "#157EB3" : "#eee",
+                        borderWidth: 1.5,
+                      },
+                    ]}
+                    onFocus={() => {
+                      setFieldTouched("password");
+                    }}
+                    onBlur={() => {
+                      setFieldTouched("password", "");
+                    }}
+                    placeholder="Password"
+                    secureTextEntry={!passwordIsVisible}
+                    placeholderTextColor="#7C808D"
+                    selectionColor="#3662AA"
+                    value={values.password}
+                    onChangeText={handleChange("password")}
+                  />
+                  <TouchableOpacity
+                    style={styles.passwordVisibleButton}
+                    onPress={() => setPasswordIsVisible(!passwordIsVisible)}
+                  >
+                    <Feather
+                      name={passwordIsVisible ? "eye" : "eye-off"}
+                      size={20}
+                      color="#7C808D"
+                    />
+                  </TouchableOpacity>
+                </View>
+                {touched.password && errors.password && (
+                  <Text style={styles.error}>{errors.password}</Text>
+                )}
+                <TouchableOpacity
+                  onPress={isValid ? handleSubmit : inValidFrom}
+                  style={styles.loginButton}
+                >
+                  <Text style={styles.loginButtonText}>Login</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </Formik>
 
           <TouchableOpacity
             onPress={() => {
@@ -129,6 +211,15 @@ export default function App() {
             </Text>
           </TouchableOpacity>
         </View>
+        {loader ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator
+              style={styles.activity}
+              size={Size.xxLarge}
+              color={Colors.primary}
+            />
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -147,13 +238,19 @@ const styles = StyleSheet.create({
     fontFamily: "GTWalsheimProMedium",
     marginBottom: 34,
   },
+  error: {
+    color: "red",
+    fontSize: 12,
+    fontFamily: "GTWalsheimPro",
+  },
 
   inputContainer: {
     flexDirection: "row",
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 15,
+    marginBottom: 7.5,
+    marginTop: 7.5,
     position: "relative",
   },
   input: {
@@ -167,12 +264,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
   },
-  loginButton: {
-    backgroundColor: "#157EB3",
-    padding: 14,
-    borderRadius: 50,
-    marginTop: 20,
-  },
+
   loginButtonText: {
     color: "#fff",
     textAlign: "center",
@@ -231,5 +323,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#3662AA",
     fontFamily: "GTWalsheimPro",
+  },
+
+  loginButton: {
+    backgroundColor: Colors.primary,
+    padding: 14,
+    borderRadius: 50,
+    marginTop: 20,
+  },
+  activity: {
+    marginVertical: Size.xxLarge,
+  },
+  loaderContainer: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

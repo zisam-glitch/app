@@ -19,7 +19,7 @@ export default function useFetch() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get<Product[]>("https://parishbackend-2.onrender.com/api/products/");
+      const response = await axios.get<Product[]>("https://parishbackend-production.up.railway.app/api/products/");
       setData(response.data);
     } catch (error) {
         setError(error as Error | null);

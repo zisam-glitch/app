@@ -83,8 +83,8 @@ export default function BottomTabNavigation() {
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={Profile}
+        name="Appointments"
+        component={appoinments}
         options={{
           tabBarIcon: ({ focused }) => {
             return (
@@ -110,8 +110,8 @@ export default function BottomTabNavigation() {
         }}
       />
       <Tab.Screen
-        name="Appointments"
-        component={appoinments}
+        name="Profile"
+        component={Profile}
         options={{
           tabBarIcon: ({ focused }) => {
             return (

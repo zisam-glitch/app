@@ -30,8 +30,8 @@ export default function Welcome() {
 const styles = StyleSheet.create({
   welcome:{
     backgroundColor: Colors.primary,
-    borderBottomEndRadius: 8,
-    borderBottomStartRadius: 8,
+    // borderBottomEndRadius: 8,
+    // borderBottomStartRadius: 8,
   },
   welcomeTxt: {
     fontFamily: "GTWalsheimProMedium",
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 10,
-    marginBottom: 25,
+    marginBottom: 30,
   },
   bookingText: {
     color: Colors.primary,
